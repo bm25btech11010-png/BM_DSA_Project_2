@@ -5,7 +5,10 @@
 #include <algorithm>
 #include <iomanip>
 #include <cmath>
+#include <cctype>
 using namespace std;
+
+// Dynamic Programming
 
 int editDistance(const string &a, const string &b)
 {
@@ -25,12 +28,18 @@ int editDistance(const string &a, const string &b)
         {
             int cost = (a[i - 1] == b[j - 1]) ? 0 : 1;
 
-            dp[i][j] = min({dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost});
+            dp[i][j] = min({
+                dp[i - 1][j] + 1,
+                dp[i][j - 1] + 1,
+                dp[i - 1][j - 1] + cost
+            });
         }
     }
 
     return dp[m][n];
 }
+
+// Graph Theory
 
 struct Edge
 {
@@ -54,6 +63,7 @@ struct DSU
     {
         if (parent[x] != x)
             parent[x] = find(parent[x]);
+
         return parent[x];
     }
 
@@ -77,9 +87,9 @@ struct DSU
     }
 };
 
-void kruskal(int n, const vector<vector<int>> &dist, const vector<string> &names)
+void kruskal(int n, const vector<vector<int>> &dist,
+             const vector<string> &names)
 {
-
     vector<Edge> edges;
 
     for (int i = 0; i < n; i++)
@@ -90,13 +100,18 @@ void kruskal(int n, const vector<vector<int>> &dist, const vector<string> &names
         }
     }
 
-    sort(edges.begin(), edges.end(), [](const Edge &a, const Edge &b)
-         { return a.weight < b.weight; });
+    sort(edges.begin(), edges.end(),
+         [](const Edge &a, const Edge &b)
+         {
+             return a.weight < b.weight;
+         });
 
     DSU dsu(n);
     int totalWeight = 0;
 
-    cout << "\n";
+    cout << "\n========== GRAPH THEORY ==========\n";
+    cout << "Kruskal's Minimum Spanning Tree:\n\n";
+
     for (const auto &e : edges)
     {
         if (dsu.unite(e.u, e.v))
@@ -108,7 +123,11 @@ void kruskal(int n, const vector<vector<int>> &dist, const vector<string> &names
             totalWeight += e.weight;
         }
     }
+
+    cout << "\nTotal MST Weight: " << totalWeight << "\n";
 }
+
+// Greedy Algorithm
 
 struct TreeNode
 {
@@ -138,9 +157,9 @@ string newick(TreeNode *node)
            to_string(max(0.0, rightBranch)) + ")";
 }
 
-void upgma(int n, const vector<vector<int>> &dist, const vector<string> &names)
+void upgma(int n, const vector<vector<int>> &dist,
+           const vector<string> &names)
 {
-
     vector<Cluster> clusters;
 
     for (int i = 0; i < n; i++)
@@ -151,6 +170,9 @@ void upgma(int n, const vector<vector<int>> &dist, const vector<string> &names)
         clusters.push_back({{i}, leaf});
     }
 
+    cout << "\n========== GREEDY ALGORITHM ==========\n";
+    cout << "UPGMA Cluster Merging Steps:\n\n";
+
     while (clusters.size() > 1)
     {
         double best = 1e18;
@@ -160,7 +182,6 @@ void upgma(int n, const vector<vector<int>> &dist, const vector<string> &names)
         {
             for (int j = i + 1; j < (int)clusters.size(); j++)
             {
-
                 double sum = 0;
                 int count = 0;
 
@@ -184,6 +205,9 @@ void upgma(int n, const vector<vector<int>> &dist, const vector<string> &names)
             }
         }
 
+        cout << "Merging clusters at distance: "
+             << fixed << setprecision(2) << best << "\n";
+
         TreeNode *parent = new TreeNode();
         parent->left = clusters[a].node;
         parent->right = clusters[b].node;
@@ -201,23 +225,21 @@ void upgma(int n, const vector<vector<int>> &dist, const vector<string> &names)
         clusters.push_back(merged);
     }
 
-    cout << "\nUPGMA Phylogenetic Tree:\n";
+    cout << "\nUPGMA Phylogenetic Tree (Newick Format):\n";
+    cout << fixed << setprecision(2);
     cout << newick(clusters[0].node) << ";\n";
 }
+
+// ==========================================
+// MAIN FUNCTION
+// ==========================================
 
 int main()
 {
     int n;
 
-    cout << "Phylogentic Tree Builder\n";
-    cout << "Enter number of DNA sequences: ";
+    cout << "Enter number of DNA sequences (>= 2): ";
     cin >> n;
-
-    if (n < 2)
-    {
-        cout << "At least two sequences are required.\n";
-        return 0;
-    }
 
     vector<string> names(n), sequences(n);
 
@@ -228,20 +250,16 @@ int main()
     {
         cin >> names[i] >> sequences[i];
 
-        for (char c : sequences[i])
+        for (char &c : sequences[i])
         {
-            if (c != 'A' && c != 'T' &&
-                c != 'G' && c != 'C')
-            {
-                cout << "Invalid DNA sequence.\n";
-                return 0;
-            }
+            c = toupper(static_cast<unsigned char>(c));
         }
     }
 
     vector<vector<int>> dist(n, vector<int>(n, 0));
 
-    cout << "\nDistance Matrix:\n";
+    cout << "\n========== DYNAMIC PROGRAMMING ==========\n";
+    cout << "Pairwise DNA Edit Distance Matrix:\n\n";
 
     for (int i = 0; i < n; i++)
     {
@@ -251,9 +269,9 @@ int main()
                 editDistance(sequences[i], sequences[j]);
         }
     }
-    cout << "\n";
 
     cout << setw(12) << " ";
+
     for (const auto &name : names)
         cout << setw(12) << name;
 
@@ -270,5 +288,8 @@ int main()
     }
 
     kruskal(n, dist, names);
+    
     upgma(n, dist, names);
+
+    return 0;
 }
