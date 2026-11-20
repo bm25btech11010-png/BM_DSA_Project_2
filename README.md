@@ -1,4 +1,4 @@
-# BM_DSA_Project_2
+# Phylogenetic Tree Builder
 
 ## Group 7
 
